@@ -1,0 +1,124 @@
+#!/bin/bash
+#awk中与变量与字符常量时加引号
+
+
+# 找出全部要文件并除重
+# awk '/file_name/{ if($2 != "NONE")print $2 ; }' *_Android_scatter.txt | uniq
+
+# 下面的方法也行
+# awk ' {if($1 ~ /file_name/ && $2 != "NONE") print $2 ;}' *_Android_scatter.txt | uniq
+
+
+# awk进行分割时会自动的去年首尾的空白，$0中保存的是原始的内容
+
+
+# variable
+
+GREEN='\e[0;32m'
+RED='\e[1;31m'
+END='\e[0m'
+function RED()
+{
+	echo -e  "${RED}$1${END}"
+}
+
+function GREEN()
+{
+	echo -e  "${GREEN}$1${END}"
+}
+
+
+# 读取scatter文件，解析出要复制的文件
+# $1 目标目录, 调用者要确保此目录存在
+function copy_file()
+{
+#	GREEN "$# $1"
+	if [ $# -ne 1 ]; then
+		RED "$0 dest you miss destination folder"
+		return -1
+	fi
+	if [ ! -d "$1" ]; then
+		RED "$0 $1; $1 is not a directory or not exist"
+		return -1
+	fi
+	cp *_Android_scatter.txt $1
+	file_to_copy=$(awk '/file_name/{ if($2 != "NONE")print $2 ; }' *_Android_scatter.txt | uniq)
+	for f in $file_to_copy; do
+		name=${f%.*}
+		ext=${f##*.}
+		candidate=(-sign. -verified. .)
+		for c in ${candidate[@]}; do
+			nf="${name}${c}${ext}"
+			if [ -f "$nf" ]; then
+				GREEN "$nf"
+				cp -f $nf $1
+				if [ "$?" -ne 0 ]; then
+					RED "copy $nf to $1 fail"
+					return $?
+				fi
+				break
+			fi
+		done
+	done
+}
+
+
+# 读取scatter文件，解析出要复制的文件
+# $1 目标目录, 调用者要确保此目录存在
+function copy_modem()
+{
+	local db
+	db="$1/DB"
+	if [ -d "$db" ]; then
+		rm -rf "$db"
+	fi
+	mkdir -p "$db"
+	if ls vendor/etc/mddb/BPLGUInfoCustomAppSrcP* &>/dev/null ; then
+		cp vendor/etc/mddb/BPLGUInfoCustomAppSrcP* "$db"
+	fi
+	if ls obj/CGEN/APDB* &>/dev/null ; then
+		cp obj/CGEN/APDB* "$db"
+	fi
+}
+
+function gen_file()
+{
+	file_to_copy=$(awk '/file_name/{ if($2 != "NONE")print $2 ; }' *_Android_scatter.txt | uniq)
+	for f in $file_to_copy; do
+		touch $f
+	done
+}
+
+
+function Usage()
+{
+	echo "Auto package system: "
+	echo "Usage: pack2 project target_folder_name"
+}
+
+out_base=out/target/product
+if [[ $# -ne 2 ]]; then
+	Usage
+	exit 1
+fi
+target="$(pwd)/../ROM/$2"
+project_base="$out_base/$1"
+if [[ ! -d "$project_base" ]]; then
+	RED "$project_base is not a folder or exist"
+	Usage
+	exit 1
+else
+	if [ -d "$target" ]; then
+		rm -rf "$target"
+	fi
+	mkdir -p "$target"
+	pushd "$project_base"  &>/dev/null
+#	gen_file
+	copy_file "$target"
+	copy_modem "$target"
+	popd &>/dev/null
+fi
+# we do compression
+pushd $(PWD)/ROM
+   zip -r ${2}.zip $2
+popd
