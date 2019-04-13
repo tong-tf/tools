@@ -101,6 +101,7 @@ if [[ $# -ne 2 ]]; then
 	Usage
 	exit 1
 fi
+rom_folder="$(pwd)/../ROM"
 target="$(pwd)/../ROM/$2"
 project_base="$out_base/$1"
 if [[ ! -d "$project_base" ]]; then
@@ -119,6 +120,7 @@ else
 	popd &>/dev/null
 fi
 # we do compression
-pushd $(PWD)/ROM
-   zip -r ${2}.zip $2
+pushd $rom_folder
+   zip -r -0  ${2}.zip $2
+   echo "zip -r ${2}.zip $2"
 popd
