@@ -46,6 +46,11 @@ function copy_file()
 	for f in $file_to_copy; do
 		name=${f%.*}
 		ext=${f##*.}
+        #echo "$name | $ext"
+        if [ "$name" = "$ext" ] ; then  # for those without extension, we just copy it.
+            GREEN $f
+            cp -f $f $1
+        fi
 		candidate=(-sign. -verified. .)
 		for c in ${candidate[@]}; do
 			nf="${name}${c}${ext}"
@@ -119,8 +124,9 @@ else
 	copy_modem "$target"
 	popd &>/dev/null
 fi
+#exit 1 # for test
 # we do compression
 pushd $rom_folder
-   zip -r -0  ${2}.zip $2
+   zip -r  ${2}.zip $2
    echo "zip -r ${2}.zip $2"
 popd
