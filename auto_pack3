@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+
+mid_project=$(ls out/target/product/)
+if [[ -z $mid_project ]]; then
+	echo "No mtk project found, return"
+	exit -1
+fi
+system_prop=out/target/product/${mid_project}/system/build.prop
+folder_name=$(awk -F= '/ro.build.display.id/ { print $2}; ' $system_prop)
+echo $folder_name
+pack2 $mid_project  $folder_name
+
+
+
+
