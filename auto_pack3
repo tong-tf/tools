@@ -7,9 +7,16 @@ if [[ -z $mid_project ]]; then
 	echo "No mtk project found, return"
 	exit -1
 fi
-system_prop=out/target/product/${mid_project}/system/build.prop
+out_mid=out/target/product/$mid_project
+system_prop=$out_mid/system/build.prop
 folder_name=$(awk -F= '/ro.build.display.id/ { print $2}; ' $system_prop)
+pcba=$(echo ${folder_name##*_} | cut -d- -f1)
+pcba_folder=device/mediateksample/$mid_project/bnd/$pcba
 echo $folder_name
+# check items, we copy from PCBA folder
+if [ ! -e $out_mid/items.ini ] ; then
+    cp -v $pcba_folder/items.ini $out_mid/ || exit
+fi
 pack2 $mid_project  $folder_name
 
 
