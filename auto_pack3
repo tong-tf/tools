@@ -15,7 +15,7 @@ pcba_folder=device/mediateksample/$mid_project/bnd/$pcba
 echo $folder_name
 # check items, we copy from PCBA folder
 if [ ! -e $out_mid/items.ini ] ; then
-    cp -v $pcba_folder/items.ini $out_mid/ || exit
+    cp -v $pcba_folder/items.ini $out_mid/ 
 fi
 pack2 $mid_project  $folder_name
 
